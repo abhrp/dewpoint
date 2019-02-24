@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Dewpoint</string>
+    <string name="no_internet">Internet is not connected</string>
+    <string name="no_location">Could not get location</string>
+    <string name="no_permission">Location permission not granted</string>
+    <string name="temperature_in_fahrenheit">Temperature in fahrenheit</string>
+
+    <string name="feels_like">Feels like %1$s</string>
+    <string name="dew_point">Dew point %1$s</string>
+    <string name="humidity">Humidity %1$s</string>
+    <string name="pressure">Pressure %1$s</string>
+    <string name="wind_speed">Wind Speed %1$s</string>
+    <string name="cloud_cover">Cloud Cover %1$s</string>
+    <string name="visibility">Visibility %1$s</string>
+    <string name="weather_summary">Weather summary</string>
+</resources>
