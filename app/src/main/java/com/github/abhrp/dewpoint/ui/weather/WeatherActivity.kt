@@ -2,6 +2,7 @@ package com.github.abhrp.dewpoint.ui.weather
 
 import android.Manifest
 import android.content.Context
+import android.content.SyncRequest
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -10,6 +11,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.github.abhrp.dewpoint.R
@@ -19,8 +22,10 @@ import com.github.abhrp.dewpoint.util.NetworkUtil
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_weather.*
 import kotlinx.android.synthetic.main.weather_card.*
+import permissions.dispatcher.*
 import javax.inject.Inject
 
+@RuntimePermissions
 class WeatherActivity : DaggerAppCompatActivity(), WeatherContract.WeatherView {
 
     @Inject
@@ -64,13 +69,14 @@ class WeatherActivity : DaggerAppCompatActivity(), WeatherContract.WeatherView {
         weatherPresenter.attach(this)
         weatherPresenter.getCachedWeatherData()
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (networkUtil.isConnected()) {
-            checkLocationPermission()
-        } else {
+
+
+        if (!networkUtil.isConnected()) {
             showError(error = getString(R.string.no_internet))
             weatherPresenter.getCachedWeatherData()
+        } else {
+            getUserLocationDetailsWithPermissionCheck()
         }
-
     }
 
 
@@ -79,30 +85,6 @@ class WeatherActivity : DaggerAppCompatActivity(), WeatherContract.WeatherView {
         weatherPresenter.getLocationDetails(latitude, longitude)
     }
 
-    private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                REQUEST_LOCATION_PERMISSION
-            )
-        } else {
-            getUserLocation(true)
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        when (requestCode) {
-            REQUEST_LOCATION_PERMISSION -> {
-                val hasPermission = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                getUserLocation(hasPermission)
-            }
-        }
-    }
 
     override fun showWeatherData(weather: Weather) {
         var temp: String? = null
@@ -150,24 +132,35 @@ class WeatherActivity : DaggerAppCompatActivity(), WeatherContract.WeatherView {
         }
     }
 
-
-    private fun getUserLocation(hasPermission: Boolean) {
-        if (hasPermission) {
-            val locationProvider =
-                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
-            try {
-                useLastKnownLocation()
-                locationManager.requestLocationUpdates(locationProvider, LOCATION_INTERVAL, 0f, locationListener)
-            } catch (e: SecurityException) {
-                showError(error = getString(R.string.no_location))
-                Log.e(WeatherActivity::class.qualifiedName, "Error : ", e)
-            }
-        } else {
-            showError(error = getString(R.string.no_permission))
-            weatherPresenter.getWeatherFromCachedLocation()
+    @NeedsPermission(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun getUserLocationDetails() {
+        val locationProvider =
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
+        try {
+            useLastKnownLocation()
+            locationManager.requestLocationUpdates(locationProvider, LOCATION_INTERVAL, 0f, locationListener)
+        } catch (e: SecurityException) {
+            showError(error = getString(R.string.no_location))
+            Log.e(WeatherActivity::class.qualifiedName, "Error : ", e)
         }
     }
 
+    @OnShowRationale(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+    fun showRationaleForLocation(request: PermissionRequest) {
+        showRationaleDialog(R.string.rationale, request)
+    }
+
+    @OnPermissionDenied(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun onLocationPermissionDenied() {
+        showError(error = getString(R.string.no_permission))
+        weatherPresenter.getWeatherFromCachedLocation()
+    }
+
+    @OnNeverAskAgain(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun onLocationNeverAsk() {
+        showError(error = getString(R.string.no_permission))
+        weatherPresenter.getWeatherFromCachedLocation()
+    }
 
     private fun useLastKnownLocation() {
         val location = getLastKnownLocation()
@@ -177,6 +170,7 @@ class WeatherActivity : DaggerAppCompatActivity(), WeatherContract.WeatherView {
             weatherPresenter.getWeatherFromCachedLocation()
         }
     }
+
     @Throws(SecurityException::class)
     private fun getLastKnownLocation(): Location? {
         val providers = locationManager.getProviders(true)
@@ -219,6 +213,15 @@ class WeatherActivity : DaggerAppCompatActivity(), WeatherContract.WeatherView {
 
     override fun showError(error: String) {
         Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+    }
+
+    private fun showRationaleDialog(@StringRes messageResId: Int, request: PermissionRequest) {
+        AlertDialog.Builder(this)
+            .setPositiveButton(R.string.button_allow) { _, _ -> request.proceed() }
+            .setNegativeButton(R.string.button_deny) { _, _ -> request.cancel() }
+            .setCancelable(false)
+            .setMessage(messageResId)
+            .show()
     }
 
     override fun onDestroy() {

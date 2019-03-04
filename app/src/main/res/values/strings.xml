@@ -13,4 +13,7 @@
     <string name="cloud_cover">Cloud Cover %1$s</string>
     <string name="visibility">Visibility %1$s</string>
     <string name="weather_summary">Weather summary</string>
+    <string name="button_allow">Allow</string>
+    <string name="button_deny">Deny</string>
+    <string name="rationale">Location permission is required to get accurate weather data</string>
 </resources>
