@@ -8,7 +8,11 @@ import com.github.abhrp.dewpoint.util.IconUtil
 import com.github.abhrp.dewpoint.util.WeatherDataUtil
 import javax.inject.Inject
 
-class WeatherDataMapper @Inject constructor(private val dateUtil: DateUtil, private val iconUtil: IconUtil, private val weatherDataUtil: WeatherDataUtil) : ViewMapper<WeatherData, Weather> {
+class WeatherDataMapper @Inject constructor(
+    private val dateUtil: DateUtil,
+    private val iconUtil: IconUtil,
+    private val weatherDataUtil: WeatherDataUtil
+) : ViewMapper<WeatherData, Weather> {
     override fun mapToView(model: WeatherData): Weather {
         val currentWeatherData = model.currentWeatherData
         return Weather(

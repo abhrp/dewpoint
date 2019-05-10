@@ -7,7 +7,7 @@ import javax.inject.Inject
 class IconUtil @Inject constructor() {
 
     fun getWeatherIcon(icon: String?): Int {
-        return when(icon) {
+        return when (icon) {
             "clear-day" -> R.drawable.ic_clear_day
             "clear-night" -> R.drawable.ic_clear_night
             "rain" -> R.drawable.ic_rain

@@ -2,8 +2,6 @@ package com.github.abhrp.dewpoint.ui.weather
 
 import android.Manifest
 import android.content.Context
-import android.content.SyncRequest
-import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -13,8 +11,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.github.abhrp.dewpoint.R
 import com.github.abhrp.dewpoint.ui.weather.model.LocationDetails
 import com.github.abhrp.dewpoint.ui.weather.model.Weather

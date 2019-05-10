@@ -16,7 +16,4 @@ class WeatherApp : DaggerApplication() {
 
     override fun applicationInjector() = applicationInjector
 
-    override fun onCreate() {
-        super.onCreate()
-    }
 }
